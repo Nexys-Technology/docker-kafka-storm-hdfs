@@ -1,0 +1,74 @@
+zookeeper:
+  image: wurstmeister/zookeeper
+  ports: 
+    - "2181:2181"
+    - "22222:22"
+hadoop:
+  #build: ./hadoop-docker
+  image: sequenceiq/hadoop-docker:2.7.0
+  expose:
+    - "9000"
+    - "50010"
+  ports:
+    # HDFS Ports
+#    - "9000:9000"
+#    - "50010:50010"
+#    - "50020:50020"
+#    - "50070:50070"
+#    - "50075:50075"
+#    - "50090:50090"
+    # MapRed ports
+#    - "19888"
+    # Yarn Ports
+#    - "8030"
+#    - "8031"
+#    - "8032"
+#    - "8033"
+#    - "8040"
+#    - "8042"
+#    - "8088"
+    # Ssh
+    - "22227:2122"
+    # Other
+#    - "49707"
+kafka:
+  image: wurstmeister/kafka:0.8.2.0
+  ports:
+    - "9092:9092"
+    - "22223:22"
+  links:
+    - zookeeper:zk
+  environment:
+    KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+nimbus:
+  image: wurstmeister/storm-nimbus
+  ports:
+    - "49773:3773"
+    - "49772:3772"
+    - "49627:6627"
+    - "22224:22"
+  links: 
+    - zookeeper:zk
+    - kafka:kf
+    - hadoop:hp
+supervisor:
+  image: wurstmeister/storm-supervisor
+  ports:
+    - "8000"
+    - "22225:22"
+    - "6703:6703"
+  links: 
+    - nimbus:nimbus
+    - zookeeper:zk
+    - kafka:kf
+    - hadoop:hp
+ui:
+  image: wurstmeister/storm-ui
+  ports:
+    - "49080:8080"
+    - "22226:22"
+  links: 
+    - nimbus:nimbus
+    - zookeeper:zk
